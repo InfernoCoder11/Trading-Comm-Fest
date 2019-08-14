@@ -42,6 +42,8 @@ char * lowerString(char st[]);
 void commandModify();
 void commandDelete();
 void getDecision (int &);
+void commandBuy();
+void commandSell();
 
 struct details{
     char teamName[100];
@@ -128,7 +130,9 @@ void fileIn(){
     std::cout<<"3 --> to add details"<<std::endl;
     std::cout<<"4 --> to modify stock prices"<<std::endl;
     std::cout<<"5 --> to delete details"<<std::endl;
-    std::cout<<"6 --> to close the program"<<std::endl;
+    std::cout<<"6 --> to buy shares"<<std::endl;
+    std::cout<<"7 --> to sell shares"<<std::endl;
+    std::cout<<"8 --> to close the program"<<std::endl;
     //std::getchar();
     //std::cin.getline(command, 20);
     //getDecision (decision);
@@ -149,11 +153,58 @@ void fileIn(){
     else if (decision == 5)
         commandDelete();
     else if (decision == 6)
+        commandBuy();
+    else if (decision == 7)
+        commandSell();
+    else if (decision == 8)
         ;
     else{
         std::cout<<"Enter a valid command!"<<std::endl;
         fileIn();
     }
+}
+
+void commandBuy(){
+    fileIn();
+}
+
+void commandSell(){
+    fileStream.close();
+    fileStream.open("data.dat", std::ios::in | std::ios::out | std::ios::binary);
+    fileMode = "inout";
+    details team;
+    int stockIndex, quantToSell;
+    int tNum, numOfRecords = nRecords();
+    for (int i = 0; i < numOfRecords; ++i){
+        fileStream.read ((char *) & team, sizeof(details));
+        std::cout<<i + 1<<" --> "<<team.teamName<<std::endl;
+    }
+    std::cout<<"Enter team number: ";
+    std::cin>>tNum;
+    std::cin.ignore();
+    if (tNum > 0){
+        fileStream.seekg((tNum - 1)*sizeof(details), std::ios::beg);
+        fileStream.read ((char *) & team, sizeof(details));
+        printDetails(tNum);
+        for (int i = 0; i < team.numOfStocks; ++i)
+            std::cout<<i + 1<<" --> "<<team.stockCodes[i]<<std::endl;
+        std::cout<<"Enter stock to sell: ";
+        std::cin>>stockIndex; --stockIndex;
+        std::cin.ignore();
+        std::cout<<"Enter quantity to sell: ";
+        std::cin>>quantToSell;
+        if (team.stockQuant[stockIndex] >= quantToSell){
+            team.balance += quantToSell*findStockPrice(team.stockCodes[stockIndex]);
+            team.stockQuant[stockIndex] -= quantToSell;
+            fileStream.seekp((tNum - 1)*sizeof(details), std::ios::beg);
+            fileStream.write ((char *) & team, sizeof(team));
+        }
+        else
+            std::cout<<"Warning: Trying to sell more shares than they own!"<<std::endl;
+    }
+    else
+        std::cout<<"Enter a valid team number!"<<std::endl;
+    fileIn();
 }
 
 void printDetails(int n){
@@ -301,7 +352,7 @@ void commandShow(){
     if (tNum > 0)
         printDetails(tNum);
     else
-        std::cout<<"Enetr a valid team number!"<<std::endl;
+        std::cout<<"Enter a valid team number!"<<std::endl;
     fileIn();
 }
 
