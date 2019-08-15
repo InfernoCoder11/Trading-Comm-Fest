@@ -44,6 +44,7 @@ void commandDelete();
 void getDecision (int &);
 void commandBuy();
 void commandSell();
+bool isValidStockCode (char stockCode[10]);
 
 struct details{
     char teamName[100];
@@ -165,7 +166,68 @@ void fileIn(){
 }
 
 void commandBuy(){
+    fileStream.close();
+    fileStream.open("data.dat", std::ios::in | std::ios::out | std::ios::binary);
+    fileMode = "inout";
+    details team;
+    int tNum, quantToBuy, numOfRecords = nRecords();
+    char stockCodeToBuy[10];
+    bool bought = false;
+    for (int i = 0; i < numOfRecords; ++i){
+        fileStream.read ((char *) & team, sizeof(details));
+        std::cout<<i + 1<<" --> "<<team.teamName<<std::endl;
+    }
+    std::cout<<"Enter team number: ";
+    std::cin>>tNum;
+    std::cin.ignore();
+    if (tNum > 0){
+        fileStream.seekg((tNum - 1)*sizeof(details), std::ios::beg);
+        fileStream.read ((char *) & team, sizeof(details));
+        printDetails(tNum);
+        std::cout<<"Enter stock code to buy: ";
+        std::cin>>stockCodeToBuy;
+        if (!isValidStockCode(stockCodeToBuy)){
+            std::cout<<"Invalid stock code!"<<std::endl;
+            return;
+        }
+        std::cout<<"Enter quantity to buy: ";
+        std::cin>>quantToBuy;
+        team.balance -= quantToBuy*findStockPrice(stockCodeToBuy);
+        if (team.balance < 0){
+            std::cout<<"Warning: Team balance negative! Reversing last action and exiting"<<std::endl;
+            return;
+        }
+        for (int i = 0; i < team.numOfStocks; ++i)
+            if (!strcmp(team.stockCodes[i], stockCodeToBuy)){
+                team.stockQuant[i] += quantToBuy;
+                bought = true;
+            }
+        if (!bought){
+            ++team.numOfStocks;
+            strncpy(team.stockCodes[team.numOfStocks - 1], stockCodeToBuy, 10);
+            team.stockQuant[team.numOfStocks - 1] = quantToBuy;
+            bought = true;
+        }
+    }
+    else
+        std::cout<<"Enter a valid team number!"<<std::endl;
+    fileStream.seekp((tNum - 1)*sizeof(details), std::ios::beg);
+    fileStream.write((char *) & team, sizeof(details));
     fileIn();
+}
+
+bool isValidStockCode (char stockCode[10]){
+    stocksFileStream.close();
+    stocksFileStream.open("stocks.dat", std::ios::in | std::ios::binary);
+    stocksFileMode = "in";
+    stocks stock;
+    int numOfRecords = nStocksRecords();
+    for (int i  = 0; i < numOfRecords; ++i){
+        stocksFileStream.read((char *) & stock, sizeof(stocks));
+        if (!strcmp(stock.stockCode, stockCode))
+            return true;
+    }
+    return false;
 }
 
 void commandSell(){
@@ -427,7 +489,7 @@ void commandModify(){
 }
 
 void commandDelete(){
-
+    fileIn();
 }
 
 void getDecision (int & decision){
