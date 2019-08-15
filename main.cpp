@@ -97,8 +97,8 @@ void addDetails(){
     char tName[100], stockCode[10]; //char * required for cin.getline()
     std::cout<<"How many team's details do you want to add? ";
     std::cin>>n;
-    team.balance = initBalance;
     for (int i = 0; i < n; ++i){
+        team.balance = initBalance;
         std::getchar();
         std::cout<<"Enter team name: ";
         std::cin.getline(tName, 100);
