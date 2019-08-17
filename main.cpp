@@ -45,6 +45,7 @@ void getDecision (int &);
 void commandBuy();
 void commandSell();
 bool isValidStockCode (char stockCode[10]);
+void clrscr();
 
 struct details{
     char teamName[100];
@@ -130,9 +131,10 @@ void fileIn(){
     std::cout<<"2 --> to view details of a specific team"<<std::endl;
     std::cout<<"3 --> to add details"<<std::endl;
     std::cout<<"4 --> to modify stock prices"<<std::endl;
-    std::cout<<"5 --> to delete details"<<std::endl;
-    std::cout<<"6 --> to buy shares"<<std::endl;
-    std::cout<<"7 --> to sell shares"<<std::endl;
+    //std::cout<<"5 --> to delete details"<<std::endl;
+    std::cout<<"5 --> to buy shares"<<std::endl;
+    std::cout<<"6 --> to sell shares"<<std::endl;
+    std::cout<<"7 --> to clear the screen"<<std::endl;
     std::cout<<"8 --> to close the program"<<std::endl;
     //std::getchar();
     //std::cin.getline(command, 20);
@@ -151,12 +153,14 @@ void fileIn(){
         commandAdd();
     else if (decision == 4)
         commandModify();
+    /*else if (decision == 5)
+        commandDelete();*/
     else if (decision == 5)
-        commandDelete();
-    else if (decision == 6)
         commandBuy();
-    else if (decision == 7)
+    else if (decision == 6)
         commandSell();
+    else if (decision == 7)
+        clrscr();
     else if (decision == 8)
         ;
     else{
@@ -539,6 +543,11 @@ void createDataFile(){
             <<"Always keep a backup just in case."<<std::endl;
     fileMode = "out";
     addDetails();
+}
+
+void clrscr(){
+    system("cls");
+    fileIn();
 }
 
 void prettyPrint(){
