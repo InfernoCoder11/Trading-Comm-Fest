@@ -199,6 +199,9 @@ void commandBuy(){
         team.balance -= quantToBuy*findStockPrice(stockCodeToBuy);
         if (team.balance < 0){
             std::cout<<"Warning: Team balance negative! Reversing last action and exiting"<<std::endl;
+            std::cout<<"Press any button"<<std::endl;
+            std::cin.ignore();
+            std::getchar();
             return;
         }
         for (int i = 0; i < team.numOfStocks; ++i)
@@ -265,8 +268,10 @@ void commandSell(){
             fileStream.seekp((tNum - 1)*sizeof(details), std::ios::beg);
             fileStream.write ((char *) & team, sizeof(team));
         }
-        else
+        else{
             std::cout<<"Warning: Trying to sell more shares than they own!"<<std::endl;
+            //std::getchar();
+        }
     }
     else
         std::cout<<"Enter a valid team number!"<<std::endl;
