@@ -11,11 +11,25 @@
 # include <string.h>
 # include <limits>
 
+struct details{
+    char teamName[100];
+    int numOfStocks;
+    char stockCodes[10][10];
+    int stockQuant[10];
+    long int balance;
+};
+
+struct stocks{
+    char stockName[50];
+    char stockCode[10];
+    int stockPrice;
+};
+
 std::fstream fileStream;
 std::fstream stocksFileStream;
 std::string fileMode;
 std::string stocksFileMode;
-long int initBalance = 10000;
+const long int initBalance = 10000;
 //char string[100];
 
 std::string exec(const char* cmd);
@@ -45,21 +59,8 @@ void getDecision (int &);
 void commandBuy();
 void commandSell();
 bool isValidStockCode (char stockCode[10]);
+int calcProfit(details team);
 void clrscr();
-
-struct details{
-    char teamName[100];
-    int numOfStocks;
-    char stockCodes[10][10];
-    int stockQuant[10];
-    long int balance;
-};
-
-struct stocks{
-    char stockName[50];
-    char stockCode[10];
-    int stockPrice;
-};
 
 int main(){
     std::string dir;
@@ -67,8 +68,8 @@ int main(){
     if (!checkSubString(dir, "stocks.dat"))
         createStocksDataFile();
     if (!checkSubString(dir, "data.dat")){
-        std::cout<<"Enter starting balance of teams: ";
-        std::cin>>initBalance;
+        //std::cout<<"Enter starting balance of teams: ";
+        //std::cin>>initBalance;
         createDataFile();
     }
     fileIn();
@@ -334,7 +335,17 @@ void printTeamDetails(){
         std::cout<<" : "<<team.stockQuant[i]*findStockPrice(team.stockCodes[i])<<std::endl;
     }
     std::cout<<"Balance: "<<team.balance<<std::endl;
+    std::cout<<"Profit: "<<calcProfit(team)<<std::endl;
     prettyPrint();
+}
+
+int calcProfit(details team){
+    int stocksWorth = 0, netWorth, profit;
+    for (int i = 0; i < team.numOfStocks; ++i)
+        stocksWorth += team.stockQuant[i]*findStockPrice(team.stockCodes[i]);
+    netWorth = stocksWorth + team.balance;
+    profit = netWorth - initBalance;
+    return profit;
 }
 
 int findStockPrice(char stockCode[10]){
@@ -478,8 +489,8 @@ void commandModify(){
     }
     */
    int decision;
-   std::cout<<"1 -> Modify all stock prices"<<std::endl;
-   std::cout<<"2 -> Modify single stock prices"<<std::endl;
+   std::cout<<"1 --> Modify all stock prices"<<std::endl;
+   std::cout<<"2 --> Modify single stock prices"<<std::endl;
    std::cin>>decision;
    stocksFileStream.close();
    stocksFileStream.open("stocks.dat", std::ios::in | std::ios::out | std::ios::binary);
