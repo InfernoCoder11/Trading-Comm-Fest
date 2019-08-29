@@ -15,7 +15,7 @@ std::fstream fileStream;
 std::fstream stocksFileStream;
 std::string fileMode;
 std::string stocksFileMode;
-const long int initBalance = 10000;
+long int initBalance = 10000;
 //char string[100];
 
 std::string exec(const char* cmd);
@@ -66,8 +66,11 @@ int main(){
     dir = exec("dir");
     if (!checkSubString(dir, "stocks.dat"))
         createStocksDataFile();
-    if (!checkSubString(dir, "data.dat"))
+    if (!checkSubString(dir, "data.dat")){
+        std::cout<<"Enter starting balance of teams: ";
+        std::cin>>initBalance;
         createDataFile();
+    }
     fileIn();
     fileStream.close();
     stocksFileStream.close();
@@ -474,26 +477,45 @@ void commandModify(){
         stocksFileStream.seekp((tNum - 1)*sizeof(stocks), std::ios::beg);
     }
     */
-    stocksFileStream.close();
-    stocksFileStream.open("stocks.dat", std::ios::in | std::ios::out | std::ios::binary);
-    stocksFileMode = "inout";
-    stocks stock;
-    int sNum, numOfRecords = nStocksRecords();
-    for (int i = 0; i < numOfRecords; ++i){
+   int decision;
+   std::cout<<"1 -> Modify all stock prices"<<std::endl;
+   std::cout<<"2 -> Modify single stock prices"<<std::endl;
+   std::cin>>decision;
+   stocksFileStream.close();
+   stocksFileStream.open("stocks.dat", std::ios::in | std::ios::out | std::ios::binary);
+   stocksFileMode = "inout";
+   stocks stock;
+   int sNum, numOfRecords = nStocksRecords();
+   if (decision == 1){
+       for (int i = 0; i < numOfRecords; ++i){
+            stocksFileStream.read ((char *) & stock, sizeof(stocks));
+            //std::cout<<i + 1<<" --> "<<stock.stockName<<std::endl;
+            sNum = i +1;
+            stocksFileStream.seekp((sNum - 1)*sizeof(stocks), std::ios::beg);
+            std::cout<<"Old price for "<<stock.stockName<<" : "<<stock.stockPrice<<std::endl;
+            std::cout<<"Enter new price for "<<stock.stockName<<" : ";
+            std::cin>>stock.stockPrice;
+            std::cin.ignore();
+            stocksFileStream.write ((char *) & stock, sizeof(stocks));
+        }
+   }
+   else if (decision == 2){
+        for (int i = 0; i < numOfRecords; ++i){
+            stocksFileStream.read ((char *) & stock, sizeof(stocks));
+            std::cout<<i + 1<<" --> "<<stock.stockName<<std::endl;
+        }
+        std::cout<<"Enter stock number to modify: ";
+        std::cin>>sNum;
+        std::cin.ignore();
+        stocksFileStream.seekg((sNum - 1)*sizeof(stocks), std::ios::beg);
         stocksFileStream.read ((char *) & stock, sizeof(stocks));
-        std::cout<<i + 1<<" --> "<<stock.stockName<<std::endl;
-    }
-    std::cout<<"Enter stock number to modify: ";
-    std::cin>>sNum;
-    std::cin.ignore();
-    stocksFileStream.seekg((sNum - 1)*sizeof(stocks), std::ios::beg);
-    stocksFileStream.read ((char *) & stock, sizeof(stocks));
-    stocksFileStream.seekp((sNum - 1)*sizeof(stocks), std::ios::beg);
-    std::cout<<"Old price for "<<stock.stockName<<" : "<<stock.stockPrice<<std::endl;
-    std::cout<<"Enter new price for "<<stock.stockName<<" : ";
-    std::cin>>stock.stockPrice;
-    std::cin.ignore();
-    stocksFileStream.write ((char *) & stock, sizeof(stocks));
+        stocksFileStream.seekp((sNum - 1)*sizeof(stocks), std::ios::beg);
+        std::cout<<"Old price for "<<stock.stockName<<" : "<<stock.stockPrice<<std::endl;
+        std::cout<<"Enter new price for "<<stock.stockName<<" : ";
+        std::cin>>stock.stockPrice;
+        std::cin.ignore();
+        stocksFileStream.write ((char *) & stock, sizeof(stocks));
+   }
     fileIn();
 }
 
