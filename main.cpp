@@ -86,7 +86,7 @@ void addStocks(){
     std::cin>>n;
     for (int i = 0; i < n; ++i){
         std::cin.ignore();
-        std::cout<<"Enter stock name: ";
+        std::cout<<"Enter stock name "<<i + 1<<": ";
         std::cin.getline(stock.stockName, 50);
         std::cout<<"Enter stock code: ";
         std::cin>>stock.stockCode;
@@ -105,7 +105,7 @@ void addDetails(){
     for (int i = 0; i < n; ++i){
         team.balance = initBalance;
         std::getchar();
-        std::cout<<"Enter team name: ";
+        std::cout<<"Enter team name "<<i + 1<<": ";
         std::cin.getline(tName, 100);
         strncpy(team.teamName, tName, 100);
         std::cout<<"Enter number of stocks they have: ";
@@ -114,6 +114,12 @@ void addDetails(){
             std::getchar();
             std::cout<<"Enter code of stock "<<j + 1<<": ";
             std::cin.getline(stockCode, 10);
+            if (!isValidStockCode(stockCode)){
+                std::cout<<"Warning: "<<stockCode<<" does not exist! Reversing last action..."<<std::endl;
+                std::cout<<"Press enter to continue"<<std::endl;
+                --j;
+                continue;
+            }
             strncpy(team.stockCodes[j], stockCode, 10);
             std::cout<<"Enter quantity of "<<stockCode<<": ";
             std::cin>>team.stockQuant[j];
@@ -195,7 +201,10 @@ void commandBuy(){
         std::cout<<"Enter stock code to buy: ";
         std::cin>>stockCodeToBuy;
         if (!isValidStockCode(stockCodeToBuy)){
-            std::cout<<"Invalid stock code!"<<std::endl;
+            std::cout<<"Warning: "<<stockCodeToBuy<<"does not exist! Exiting..."<<std::endl;
+             std::cout<<"Press any button"<<std::endl;
+            std::cin.ignore();
+            std::getchar();
             return;
         }
         std::cout<<"Enter quantity to buy: ";
