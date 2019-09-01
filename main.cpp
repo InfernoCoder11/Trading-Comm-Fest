@@ -92,13 +92,19 @@ void addStocks(){
         std::cin>>stock.stockCode;
         std::cout<<"Enter stock price: ";
         std::cin>>stock.stockPrice;
+        if (stock.stockPrice < 0){
+            std::cout<<"Warning: Stock price can't be negative!"<<std::endl;
+            std::cout<<"Reversing last action"<<std::endl;
+            --i;
+            continue;
+        }
         stocksFileStream.write ((char *) & stock, sizeof(stocks));
     }
 }
 
 void addDetails(){
     details team;
-    int n;
+    int n, numOfRecords = nStocksRecords();
     char tName[100], stockCode[10]; //char * required for cin.getline()
     std::cout<<"How many team's details do you want to add? ";
     std::cin>>n;
@@ -110,6 +116,18 @@ void addDetails(){
         strncpy(team.teamName, tName, 100);
         std::cout<<"Enter number of stocks they have: ";
         std::cin>>team.numOfStocks;
+        if (team.numOfStocks < 0){
+            std::cout<<"Warning: Number of stocks can't be negative"<<std::endl;
+            std::cout<<"Reversing last action..."<<std::endl;
+            --i;
+            continue;
+        }
+        if (team.numOfStocks > numOfRecords){
+            std::cout<<"Warning: You have added only "<<numOfRecords<<" stocks."<<std::endl;
+            std::cout<<"Reversing last action..."<<std::endl;
+            --i;
+            continue;
+        }
         for (int j = 0; j < team.numOfStocks; ++j){
             std::getchar();
             std::cout<<"Enter code of stock "<<j + 1<<": ";
@@ -123,6 +141,12 @@ void addDetails(){
             strncpy(team.stockCodes[j], stockCode, 10);
             std::cout<<"Enter quantity of "<<stockCode<<": ";
             std::cin>>team.stockQuant[j];
+            if (team.stockQuant < 0){
+                std::cout<<"Warning: stock quantity can't be negative!"<<std::endl;
+                std::cout<<"Reversing last action"<<std::endl;
+                --j;
+                continue;
+            }
             team.balance -= team.stockQuant[j]*findStockPrice(team.stockCodes[j]);
             if (team.balance < 0){
                 std::cout<<"Warning: Team balance negative! Reversing last action"<<std::endl;
@@ -209,6 +233,13 @@ void commandBuy(){
         }
         std::cout<<"Enter quantity to buy: ";
         std::cin>>quantToBuy;
+        if (quantToBuy < 0){
+            std::cout<<"Warning: Quantity to buy can't be negative! Reversing last action and exiting"<<std::endl;
+            std::cout<<"Press any button"<<std::endl;
+            std::cin.ignore();
+            std::getchar();
+            return;
+        }
         team.balance -= quantToBuy*findStockPrice(stockCodeToBuy);
         if (team.balance < 0){
             std::cout<<"Warning: Team balance negative! Reversing last action and exiting"<<std::endl;
@@ -275,6 +306,13 @@ void commandSell(){
         std::cin.ignore();
         std::cout<<"Enter quantity to sell: ";
         std::cin>>quantToSell;
+        if (quantToSell < 0){
+            std::cout<<"Warning: Quantity to sell can't be negative! Reversing last action and exiting"<<std::endl;
+            std::cout<<"Press any button"<<std::endl;
+            std::cin.ignore();
+            std::getchar();
+            return;
+        }
         if (team.stockQuant[stockIndex] >= quantToSell){
             team.balance += quantToSell*findStockPrice(team.stockCodes[stockIndex]);
             team.stockQuant[stockIndex] -= quantToSell;
@@ -508,14 +546,21 @@ void commandModify(){
    int sNum, numOfRecords = nStocksRecords();
    if (decision == 1){
        for (int i = 0; i < numOfRecords; ++i){
+           sNum = i +1;
+           stocksFileStream.seekg((sNum - 1)*sizeof(stocks), std::ios::beg);
             stocksFileStream.read ((char *) & stock, sizeof(stocks));
             //std::cout<<i + 1<<" --> "<<stock.stockName<<std::endl;
-            sNum = i +1;
             stocksFileStream.seekp((sNum - 1)*sizeof(stocks), std::ios::beg);
             std::cout<<"Old price for "<<stock.stockName<<" : "<<stock.stockPrice<<std::endl;
             std::cout<<"Enter new price for "<<stock.stockName<<" : ";
             std::cin>>stock.stockPrice;
             std::cin.ignore();
+             if (stock.stockPrice < 0){
+                std::cout<<"Warning: Stock price can't be negative!"<<std::endl;
+                std::cout<<"Reversing last action"<<std::endl;
+                --i;
+                continue;
+            }
             stocksFileStream.write ((char *) & stock, sizeof(stocks));
         }
    }
@@ -534,6 +579,13 @@ void commandModify(){
         std::cout<<"Enter new price for "<<stock.stockName<<" : ";
         std::cin>>stock.stockPrice;
         std::cin.ignore();
+        if (stock.stockPrice < 0){
+            std::cout<<"Warning: Stock price can't be negative!"<<std::endl;
+            std::cout<<"Reversing last action and exiting"<<std::endl;
+            std::cout<<"Press enter";
+            std::getchar();
+            return;
+        }
         stocksFileStream.write ((char *) & stock, sizeof(stocks));
    }
     fileIn();
