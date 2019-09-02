@@ -141,7 +141,7 @@ void addDetails(){
             strncpy(team.stockCodes[j], stockCode, 10);
             std::cout<<"Enter quantity of "<<stockCode<<": ";
             std::cin>>team.stockQuant[j];
-            if (team.stockQuant < 0){
+            if (team.stockQuant[j] < 0){
                 std::cout<<"Warning: stock quantity can't be negative!"<<std::endl;
                 std::cout<<"Reversing last action"<<std::endl;
                 --j;
@@ -218,14 +218,14 @@ void commandBuy(){
     std::cout<<"Enter team number: ";
     std::cin>>tNum;
     std::cin.ignore();
-    if (tNum > 0){
+    if (tNum > 0 && tNum <= numOfRecords){
         fileStream.seekg((tNum - 1)*sizeof(details), std::ios::beg);
         fileStream.read ((char *) & team, sizeof(details));
         printDetails(tNum);
         std::cout<<"Enter stock code to buy: ";
         std::cin>>stockCodeToBuy;
         if (!isValidStockCode(stockCodeToBuy)){
-            std::cout<<"Warning: "<<stockCodeToBuy<<"does not exist! Exiting..."<<std::endl;
+            std::cout<<"Warning: "<<stockCodeToBuy<<" does not exist! Exiting..."<<std::endl;
              std::cout<<"Press any button"<<std::endl;
             std::cin.ignore();
             std::getchar();
@@ -260,8 +260,13 @@ void commandBuy(){
             bought = true;
         }
     }
-    else
-        std::cout<<"Enter a valid team number!"<<std::endl;
+    else{
+        std::cout<<"Warning: Enter a valid team number!"<<std::endl;
+        std::cout<<"Exiting"<<std::endl;
+        std::cout<<"Press enter";
+        std::getchar();
+        return;
+    }
     fileStream.seekp((tNum - 1)*sizeof(details), std::ios::beg);
     fileStream.write((char *) & team, sizeof(details));
     fileIn();
@@ -295,7 +300,7 @@ void commandSell(){
     std::cout<<"Enter team number: ";
     std::cin>>tNum;
     std::cin.ignore();
-    if (tNum > 0){
+    if (tNum > 0 && tNum <= numOfRecords){
         fileStream.seekg((tNum - 1)*sizeof(details), std::ios::beg);
         fileStream.read ((char *) & team, sizeof(details));
         printDetails(tNum);
@@ -304,6 +309,12 @@ void commandSell(){
         std::cout<<"Enter stock to sell: ";
         std::cin>>stockIndex; --stockIndex;
         std::cin.ignore();
+        if (stockIndex < 0 || stockIndex >team.numOfStocks - 1){
+            std::cout<<"Warning: Invalid stock number entered! Reversing last action and exiting"<<std::endl;
+            std::cout<<"Press any button"<<std::endl;
+            std::getchar();
+            return;
+        }
         std::cout<<"Enter quantity to sell: ";
         std::cin>>quantToSell;
         if (quantToSell < 0){
@@ -324,8 +335,10 @@ void commandSell(){
             //std::getchar();
         }
     }
-    else
+    else{
         std::cout<<"Enter a valid team number!"<<std::endl;
+        std::cout<<"Reversing last action"<<std::endl;
+    }
     fileIn();
 }
 
@@ -481,7 +494,7 @@ void commandShow(){
     std::cout<<"Enter team number to show: ";
     std::cin>>tNum;
     std::cin.ignore();
-    if (tNum > 0)
+    if (tNum > 0 && tNum <= numOfRecords)
         printDetails(tNum);
     else
         std::cout<<"Enter a valid team number!"<<std::endl;
@@ -572,6 +585,13 @@ void commandModify(){
         std::cout<<"Enter stock number to modify: ";
         std::cin>>sNum;
         std::cin.ignore();
+        if (sNum < 0 || sNum > numOfRecords){
+            std::cout<<"Warning: Wrong stock number!"<<std::endl;
+            std::cout<<"Exiting"<<std::endl;
+            std::cout<<"Press enter";
+            std::getchar();
+            return;
+        }
         stocksFileStream.seekg((sNum - 1)*sizeof(stocks), std::ios::beg);
         stocksFileStream.read ((char *) & stock, sizeof(stocks));
         stocksFileStream.seekp((sNum - 1)*sizeof(stocks), std::ios::beg);
