@@ -63,6 +63,7 @@ int calcProfit(details team);
 void clrscr();
 void fetchInitBalance();
 void createConfig();
+bool stockAlreadyBought(details team, char stockCodeToBuy[10], int & index);
 
 int main(){
     std::string dir;
@@ -249,7 +250,7 @@ void commandBuy(){
     fileStream.open("data.dat", std::ios::in | std::ios::out | std::ios::binary);
     fileMode = "inout";
     details team;
-    int tNum, quantToBuy, numOfRecords = nRecords();
+    int tNum, quantToBuy, numOfRecords = nRecords(), index; //index for stock index
     char stockCodeToBuy[10];
     bool bought = false;
     for (int i = 0; i < numOfRecords; ++i){
@@ -289,12 +290,11 @@ void commandBuy(){
             std::getchar();
             return;
         }
-        for (int i = 0; i < team.numOfStocks; ++i)
-            if (!strcmp(team.stockCodes[i], stockCodeToBuy)){
-                team.stockQuant[i] += quantToBuy;
-                bought = true;
-            }
-        if (!bought){
+        bought = stockAlreadyBought(team, stockCodeToBuy, index);
+        if (bought){
+            team.stockQuant[index] += quantToBuy;
+        }
+        else{
             ++team.numOfStocks;
             strncpy(team.stockCodes[team.numOfStocks - 1], stockCodeToBuy, 10);
             team.stockQuant[team.numOfStocks - 1] = quantToBuy;
@@ -311,6 +311,15 @@ void commandBuy(){
     fileStream.seekp((tNum - 1)*sizeof(details), std::ios::beg);
     fileStream.write((char *) & team, sizeof(details));
     fileIn();
+}
+
+bool stockAlreadyBought(details team, char stockCodeToBuy[10], int & index){
+    for (int i = 0; i < team.numOfStocks; ++i)
+        if (!strcmp(team.stockCodes[i], stockCodeToBuy)){
+            index = i;
+            return true;
+        }
+    return false;
 }
 
 bool isValidStockCode (char stockCode[10]){
