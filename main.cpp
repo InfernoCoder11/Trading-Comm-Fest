@@ -29,7 +29,7 @@ std::fstream fileStream;
 std::fstream stocksFileStream;
 std::string fileMode;
 std::string stocksFileMode;
-const long int initBalance = 10000;
+int initBalance = 10000;
 //char string[100];
 
 std::string exec(const char* cmd);
@@ -61,10 +61,17 @@ void commandSell();
 bool isValidStockCode (char stockCode[10]);
 int calcProfit(details team);
 void clrscr();
+void fetchInitBalance();
+void createConfig();
 
 int main(){
     std::string dir;
     dir = exec("dir");
+    if (checkSubString(dir, "config.ini"))
+        fetchInitBalance();
+    else{
+        createConfig();
+    }
     if (!checkSubString(dir, "stocks.dat"))
         createStocksDataFile();
     if (!checkSubString(dir, "data.dat")){
@@ -77,6 +84,39 @@ int main(){
     stocksFileStream.close();
     //getch();
     return 0;
+}
+
+void fetchInitBalance(){
+    std::ifstream config;
+    int bal;
+    config.open("config.ini", std::ios::in);
+    config>>bal;
+    if (bal){
+        std::cout<<"Found initial team balance in config.ini: "<<bal<<std::endl;
+        initBalance = bal;
+    }
+    else
+        std::cout<<"Using default initial team balance of: "<<initBalance<<std::endl;
+}
+
+void createConfig(){
+    std::ofstream config;
+    int bal;
+    config.open ("config.ini", std::ios::out);
+    std::cout<<"Enter 0 to use default initial team balance of: "<<initBalance<<std::endl;
+    std::cout<<"Enter initial team balance: ";
+    std::cin>>bal;
+    if (!bal){
+        std::cout<<"Using default team balance of: "<<initBalance<<std::endl;
+    }
+    else{
+        config<<bal;
+        std::cout<<"Team balance set in config.ini"<<std::endl;
+        std::cout<<"Do not delete it unless you're absolutely sure of what you're doing!"<<std::endl;
+        std::cout<<"To change it edit the config.ini file before running this program"<<std::endl;
+        std::cout<<"Leave it blank to use default initial team balance"<<std::endl;
+        initBalance = bal;
+    }
 }
 
 void addStocks(){
@@ -132,6 +172,7 @@ void addDetails(){
             std::getchar();
             std::cout<<"Enter code of stock "<<j + 1<<": ";
             std::cin.getline(stockCode, 10);
+            //TODO: Check if stock has already been entered.
             if (!isValidStockCode(stockCode)){
                 std::cout<<"Warning: "<<stockCode<<" does not exist! Reversing last action..."<<std::endl;
                 std::cout<<"Press enter to continue"<<std::endl;
@@ -446,13 +487,15 @@ int nRecords(){
 }
 
 int nStocksRecords(){
+    std::ifstream tempstocksFileStream;
+    tempstocksFileStream.open("stocks.dat", std::ios::in | std::ios::binary);
     int beg, cur, numOfRecords;
-    cur = stocksFileStream.tellg();
-    stocksFileStream.seekg(0, std::ios::beg);
-    beg = stocksFileStream.tellg();
-    stocksFileStream.seekg(0, std::ios::end);
-    numOfRecords = ((int) stocksFileStream.tellg() - beg)/sizeof(stocks);
-    stocksFileStream.seekg(cur, std::ios::beg);
+    cur = tempstocksFileStream.tellg();
+    tempstocksFileStream.seekg(0, std::ios::beg);
+    beg = tempstocksFileStream.tellg();
+    tempstocksFileStream.seekg(0, std::ios::end);
+    numOfRecords = ((int) tempstocksFileStream.tellg() - beg)/sizeof(stocks);
+    tempstocksFileStream.seekg(cur, std::ios::beg);
     return numOfRecords;
 }
 
@@ -647,7 +690,7 @@ void createStocksDataFile(){
     stocks stock;
     stocksFileStream.open ("stocks.dat", std::ios::out);
     std::cout<<"Stocks data file created as 'stocks.dat'.\n"
-            <<"Do not delete it or attempt to modify its content without this program!\n"
+            <<"Do not delete it unless you're absolutely sure of what you're doing!\n"
             <<"Always keep a backup just in case."<<std::endl;
     stocksFileMode = "out";
     addStocks();
@@ -658,7 +701,7 @@ void createDataFile(){
     fileStream.open("data.dat", std::ios::out | std::ios::binary);
     fileMode = "out";
     std::cout<<"Teams data file created as 'data.dat'.\n"
-            <<"Do not delete it or attempt to modify its content without this program!\n"
+            <<"Do not delete it unless you're absolutely sure of what you're doing!\n"
             <<"Always keep a backup just in case."<<std::endl;
     fileMode = "out";
     addDetails();
