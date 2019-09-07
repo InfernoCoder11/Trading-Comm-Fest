@@ -145,7 +145,7 @@ void addStocks(){
 
 void addDetails(){
     details team;
-    int n, numOfRecords = nStocksRecords();
+    int n, numOfRecords = nStocksRecords(), index, tempnumOfStocks;
     char tName[100], stockCode[10]; //char * required for cin.getline()
     std::cout<<"How many team's details do you want to add? ";
     std::cin>>n;
@@ -156,24 +156,24 @@ void addDetails(){
         std::cin.getline(tName, 100);
         strncpy(team.teamName, tName, 100);
         std::cout<<"Enter number of stocks they have: ";
-        std::cin>>team.numOfStocks;
-        if (team.numOfStocks < 0){
+        std::cin>>tempnumOfStocks;
+        team.numOfStocks = 0;
+        if (tempnumOfStocks < 0){
             std::cout<<"Warning: Number of stocks can't be negative"<<std::endl;
             std::cout<<"Reversing last action..."<<std::endl;
             --i;
             continue;
         }
-        if (team.numOfStocks > numOfRecords){
+        if (tempnumOfStocks > numOfRecords){
             std::cout<<"Warning: You have added only "<<numOfRecords<<" stocks."<<std::endl;
             std::cout<<"Reversing last action..."<<std::endl;
             --i;
             continue;
         }
-        for (int j = 0; j < team.numOfStocks; ++j){
+        for (int j = 0; j < tempnumOfStocks; ++j){
             std::getchar();
             std::cout<<"Enter code of stock "<<j + 1<<": ";
             std::cin.getline(stockCode, 10);
-            //TODO: Check if stock has already been entered.
             if (!isValidStockCode(stockCode)){
                 std::cout<<"Warning: "<<stockCode<<" does not exist! Reversing last action..."<<std::endl;
                 std::cout<<"Press enter to continue"<<std::endl;
@@ -193,8 +193,18 @@ void addDetails(){
             if (team.balance < 0){
                 std::cout<<"Warning: Team balance negative! Reversing last action"<<std::endl;
                 team.balance += team.stockQuant[j]*findStockPrice(team.stockCodes[j]);
+                std::cout<<"Available team balance: "<<team.balance<<std::endl;
                 --j;
+                continue;
             }
+            if (stockAlreadyBought(team, stockCode, index)){
+                std::cout<<"This team has already bought "<<stockCode<<". Adding stock quantity to previous purchase."<<std::endl;
+                team.stockQuant[index] += team.stockQuant[j];
+                --j;
+                //--tempnumOfStocks;
+            }
+            else
+                ++team.numOfStocks;
         }
         fileStream.write((char *) &team, sizeof(details));
     }
