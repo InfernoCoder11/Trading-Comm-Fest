@@ -141,6 +141,7 @@ void addStocks(){
         }
         stocksFileStream.write ((char *) & stock, sizeof(stocks));
     }
+    stocksFileStream.close(); //Complete all write operations
 }
 
 void addDetails(){
@@ -515,6 +516,7 @@ int nStocksRecords(){
     tempstocksFileStream.seekg(0, std::ios::end);
     numOfRecords = ((int) tempstocksFileStream.tellg() - beg)/sizeof(stocks);
     tempstocksFileStream.seekg(cur, std::ios::beg);
+    tempstocksFileStream.close();
     return numOfRecords;
 }
 
