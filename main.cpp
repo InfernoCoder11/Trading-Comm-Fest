@@ -11,6 +11,8 @@
 # include <string.h>
 # include <limits>
 
+using namespace std;
+
 struct details{
     char teamName[100];
     int numOfStocks;
@@ -25,181 +27,217 @@ struct stocks{
     int stockPrice;
 };
 
-std::fstream fileStream;
-std::fstream stocksFileStream;
-std::string fileMode;
-std::string stocksFileMode;
 int initBalance = 10000;
 //char string[100];
 
-std::string exec(const char* cmd);
-bool checkSubString (std::string s1, std::string s2);
-void fileOut();
-void fileApp();
 void fileIn();
 void addDetails();
 void printDetails(int n);
 int nRecords ();
-void addStocks();
-void createStocksDataFile();
 void createDataFile();
 void commandAll();
 void commandShow();
 void commandAdd();
-void prettyPrint();
 void printTeamDetails();
-int nStocksRecords();
-void printStocksDetails();
 void printIndStockDetails();
 int findStockPrice(char stockCode[10]);
-char * lowerString(char st[]);
 void commandModify();
-void commandDelete();
 void getDecision (int &);
 void commandBuy();
 void commandSell();
 bool isValidStockCode (char stockCode[10]);
 int calcProfit(details team);
-void clrscr();
 void fetchInitBalance();
-void createConfig();
 bool stockAlreadyBought(details team, char stockCodeToBuy[10], int & index);
 
+class functions{
+    public:
+        string exec(const char* cmd);
+        bool checkSubString (string s1, string s2);
+        void prettyPrint();
+        //char * lowerString(char st[]);
+        void clrscr();
+        void checkForFiles();
+        bool compareDir(string s);
+};
+
+class file{
+    fstream fileStream;
+    public:
+        ~file();
+};
+
+class stocksFile:private functions{
+    fstream fileStream;
+    public:
+        stocksFile();
+        ~stocksFile();
+        void addStocks();
+        void createStocksDataFile();
+        int nStocksRecords();
+        void printStocksDetails();
+};
+
+class configFile:private functions{
+    fstream fileStream;
+    void createConfig();
+    public:
+        configFile();
+        void configFile::fetchInitBalance();
+};
+
 int main(){
-    std::string dir;
-    dir = exec("dir");
-    if (checkSubString(dir, "config.ini"))
+    fileIn();
+    return 0;
+}
+
+stocksFile::stocksFile(){
+        if (compareDir("stocks.dat"))
+            createStocksDataFile();
+}
+
+void configFile::createConfig(){
+    int bal;
+    fileStream.open ("config.ini", ios::out);
+    cout<<"Enter 0 to use default initial team balance of: "<<initBalance<<endl;
+    cout<<"Enter initial team balance: ";
+    cin>>bal;
+    if (!bal){
+        cout<<"Using default team balance of: "<<initBalance<<endl;
+    }
+    else{
+        fileStream<<bal;
+        cout<<"Team balance set in config.ini"<<endl;
+        cout<<"Do not delete it unless you're absolutely sure of what you're doing!"<<endl;
+        cout<<"To change it edit the config.ini file before running this program"<<endl;
+        cout<<"Leave it blank to use default initial team balance"<<endl;
+        initBalance = bal;
+    }
+}
+
+configFile::configFile(){
+    if (compareDir("config.ini"))
         fetchInitBalance();
     else{
         createConfig();
     }
-    if (!checkSubString(dir, "stocks.dat"))
-        createStocksDataFile();
-    if (!checkSubString(dir, "data.dat")){
-        //std::cout<<"Enter starting balance of teams: ";
-        //std::cin>>initBalance;
-        createDataFile();
-    }
-    fileIn();
-    fileStream.close();
-    stocksFileStream.close();
-    //getch();
-    return 0;
 }
 
-void fetchInitBalance(){
-    std::ifstream config;
+void configFile::fetchInitBalance(){
     int bal;
-    config.open("config.ini", std::ios::in);
-    config>>bal;
+    fileStream.open("config.ini", ios::in);
+    fileStream>>bal;
     if (bal){
-        std::cout<<"Found initial team balance in config.ini: "<<bal<<std::endl;
+        cout<<"Found initial team balance in config.ini: "<<bal<<endl;
         initBalance = bal;
     }
     else
-        std::cout<<"Using default initial team balance of: "<<initBalance<<std::endl;
+        cout<<"Using default initial team balance of: "<<initBalance<<endl;
 }
 
-void createConfig(){
-    std::ofstream config;
-    int bal;
-    config.open ("config.ini", std::ios::out);
-    std::cout<<"Enter 0 to use default initial team balance of: "<<initBalance<<std::endl;
-    std::cout<<"Enter initial team balance: ";
-    std::cin>>bal;
-    if (!bal){
-        std::cout<<"Using default team balance of: "<<initBalance<<std::endl;
-    }
-    else{
-        config<<bal;
-        std::cout<<"Team balance set in config.ini"<<std::endl;
-        std::cout<<"Do not delete it unless you're absolutely sure of what you're doing!"<<std::endl;
-        std::cout<<"To change it edit the config.ini file before running this program"<<std::endl;
-        std::cout<<"Leave it blank to use default initial team balance"<<std::endl;
-        initBalance = bal;
+file::~file(){
+    fileStream.close();
+}
+
+stocksFile::~stocksFile(){
+    fileStream.close();
+}
+
+bool functions::compareDir(string s){
+    string dir = exec("dir");
+    return checkSubString(dir, s);
+}
+
+void functions::checkForFiles(){
+    string dir;
+    dir = exec("dir");
+    if (!checkSubString(dir, "data.dat")){
+        //cout<<"Enter starting balance of teams: ";
+        //cin>>initBalance;
+        createDataFile();
     }
 }
 
-void addStocks(){
+void stocksFile::addStocks(){
     stocks stock;
     int n;
-    std::cout<<"How many stocks would you like to add: ";
-    std::cin>>n;
+    cout<<"How many stocks would you like to add: ";
+    cin>>n;
     for (int i = 0; i < n; ++i){
-        std::cin.ignore();
-        std::cout<<"Enter stock name "<<i + 1<<": ";
-        std::cin.getline(stock.stockName, 50);
-        std::cout<<"Enter stock code: ";
-        std::cin>>stock.stockCode;
-        std::cout<<"Enter stock price: ";
-        std::cin>>stock.stockPrice;
+        cin.ignore();
+        cout<<"Enter stock name "<<i + 1<<": ";
+        cin.getline(stock.stockName, 50);
+        cout<<"Enter stock code: ";
+        cin>>stock.stockCode;
+        cout<<"Enter stock price: ";
+        cin>>stock.stockPrice;
         if (stock.stockPrice < 0){
-            std::cout<<"Warning: Stock price can't be negative!"<<std::endl;
-            std::cout<<"Reversing last action"<<std::endl;
+            cout<<"Warning: Stock price can't be negative!"<<endl;
+            cout<<"Reversing last action"<<endl;
             --i;
             continue;
         }
-        stocksFileStream.write ((char *) & stock, sizeof(stocks));
+        fileStream.write ((char *) & stock, sizeof(stocks));
     }
-    stocksFileStream.close(); //Complete all write operations
+    fileStream.close(); //Complete all write operations
 }
 
 void addDetails(){
     details team;
     int n, numOfRecords = nStocksRecords(), index, tempnumOfStocks;
     char tName[100], stockCode[10]; //char * required for cin.getline()
-    std::cout<<"How many team's details do you want to add? ";
-    std::cin>>n;
+    cout<<"How many team's details do you want to add? ";
+    cin>>n;
     for (int i = 0; i < n; ++i){
         team.balance = initBalance;
-        std::getchar();
-        std::cout<<"Enter team name "<<i + 1<<": ";
-        std::cin.getline(tName, 100);
+        getchar();
+        cout<<"Enter team name "<<i + 1<<": ";
+        cin.getline(tName, 100);
         strncpy(team.teamName, tName, 100);
-        std::cout<<"Enter number of stocks they have: ";
-        std::cin>>tempnumOfStocks;
+        cout<<"Enter number of stocks they have: ";
+        cin>>tempnumOfStocks;
         team.numOfStocks = 0;
         if (tempnumOfStocks < 0){
-            std::cout<<"Warning: Number of stocks can't be negative"<<std::endl;
-            std::cout<<"Reversing last action..."<<std::endl;
+            cout<<"Warning: Number of stocks can't be negative"<<endl;
+            cout<<"Reversing last action..."<<endl;
             --i;
             continue;
         }
         if (tempnumOfStocks > numOfRecords){
-            std::cout<<"Warning: You have added only "<<numOfRecords<<" stocks."<<std::endl;
-            std::cout<<"Reversing last action..."<<std::endl;
+            cout<<"Warning: You have added only "<<numOfRecords<<" stocks."<<endl;
+            cout<<"Reversing last action..."<<endl;
             --i;
             continue;
         }
         for (int j = 0; j < tempnumOfStocks; ++j){
-            std::getchar();
-            std::cout<<"Enter code of stock "<<j + 1<<": ";
-            std::cin.getline(stockCode, 10);
+            getchar();
+            cout<<"Enter code of stock "<<j + 1<<": ";
+            cin.getline(stockCode, 10);
             if (!isValidStockCode(stockCode)){
-                std::cout<<"Warning: "<<stockCode<<" does not exist! Reversing last action..."<<std::endl;
-                std::cout<<"Press enter to continue"<<std::endl;
+                cout<<"Warning: "<<stockCode<<" does not exist! Reversing last action..."<<endl;
+                cout<<"Press enter to continue"<<endl;
                 --j;
                 continue;
             }
             strncpy(team.stockCodes[j], stockCode, 10);
-            std::cout<<"Enter quantity of "<<stockCode<<": ";
-            std::cin>>team.stockQuant[j];
+            cout<<"Enter quantity of "<<stockCode<<": ";
+            cin>>team.stockQuant[j];
             if (team.stockQuant[j] < 0){
-                std::cout<<"Warning: stock quantity can't be negative!"<<std::endl;
-                std::cout<<"Reversing last action"<<std::endl;
+                cout<<"Warning: stock quantity can't be negative!"<<endl;
+                cout<<"Reversing last action"<<endl;
                 --j;
                 continue;
             }
             team.balance -= team.stockQuant[j]*findStockPrice(team.stockCodes[j]);
             if (team.balance < 0){
-                std::cout<<"Warning: Team balance negative! Reversing last action"<<std::endl;
+                cout<<"Warning: Team balance negative! Reversing last action"<<endl;
                 team.balance += team.stockQuant[j]*findStockPrice(team.stockCodes[j]);
-                std::cout<<"Available team balance: "<<team.balance<<std::endl;
+                cout<<"Available team balance: "<<team.balance<<endl;
                 --j;
                 continue;
             }
             if (stockAlreadyBought(team, stockCode, index)){
-                std::cout<<"This team has already bought "<<stockCode<<". Adding stock quantity to previous purchase."<<std::endl;
+                cout<<"This team has already bought "<<stockCode<<". Adding stock quantity to previous purchase."<<endl;
                 team.stockQuant[index] += team.stockQuant[j];
                 --j;
                 //--tempnumOfStocks;
@@ -214,22 +252,22 @@ void addDetails(){
 void fileIn(){
     char command[20];
     int decision;
-    std::cout<<"1 --> to view all details"<<std::endl;
-    std::cout<<"2 --> to view details of a specific team"<<std::endl;
-    std::cout<<"3 --> to add details"<<std::endl;
-    std::cout<<"4 --> to modify stock prices"<<std::endl;
-    //std::cout<<"5 --> to delete details"<<std::endl;
-    std::cout<<"5 --> to buy shares"<<std::endl;
-    std::cout<<"6 --> to sell shares"<<std::endl;
-    std::cout<<"7 --> to clear the screen"<<std::endl;
-    std::cout<<"8 --> to close the program"<<std::endl;
-    //std::getchar();
-    //std::cin.getline(command, 20);
+    cout<<"1 --> to view all details"<<endl;
+    cout<<"2 --> to view details of a specific team"<<endl;
+    cout<<"3 --> to add details"<<endl;
+    cout<<"4 --> to modify stock prices"<<endl;
+    //cout<<"5 --> to delete details"<<endl;
+    cout<<"5 --> to buy shares"<<endl;
+    cout<<"6 --> to sell shares"<<endl;
+    cout<<"7 --> to clear the screen"<<endl;
+    cout<<"8 --> to close the program"<<endl;
+    //getchar();
+    //cin.getline(command, 20);
     //getDecision (decision);
-    std::cin>>decision;
-    std::cin.ignore();
-    if (std::cin.fail()){
-        std::cout<<"Enter a number! exiting....."<<std::endl;
+    cin>>decision;
+    cin.ignore();
+    if (cin.fail()){
+        cout<<"Enter a number! exiting....."<<endl;
         getch();
     }
     else if (decision == 1)
@@ -251,14 +289,14 @@ void fileIn(){
     else if (decision == 8)
         ;
     else{
-        std::cout<<"Enter a valid command!"<<std::endl;
+        cout<<"Enter a valid command!"<<endl;
         fileIn();
     }
 }
 
 void commandBuy(){
     fileStream.close();
-    fileStream.open("data.dat", std::ios::in | std::ios::out | std::ios::binary);
+    fileStream.open("data.dat", ios::in | ios::out | ios::binary);
     fileMode = "inout";
     details team;
     int tNum, quantToBuy, numOfRecords = nRecords(), index; //index for stock index
@@ -266,39 +304,39 @@ void commandBuy(){
     bool bought = false;
     for (int i = 0; i < numOfRecords; ++i){
         fileStream.read ((char *) & team, sizeof(details));
-        std::cout<<i + 1<<" --> "<<team.teamName<<std::endl;
+        cout<<i + 1<<" --> "<<team.teamName<<endl;
     }
-    std::cout<<"Enter team number: ";
-    std::cin>>tNum;
-    std::cin.ignore();
+    cout<<"Enter team number: ";
+    cin>>tNum;
+    cin.ignore();
     if (tNum > 0 && tNum <= numOfRecords){
-        fileStream.seekg((tNum - 1)*sizeof(details), std::ios::beg);
+        fileStream.seekg((tNum - 1)*sizeof(details), ios::beg);
         fileStream.read ((char *) & team, sizeof(details));
         printDetails(tNum);
-        std::cout<<"Enter stock code to buy: ";
-        std::cin>>stockCodeToBuy;
+        cout<<"Enter stock code to buy: ";
+        cin>>stockCodeToBuy;
         if (!isValidStockCode(stockCodeToBuy)){
-            std::cout<<"Warning: "<<stockCodeToBuy<<" does not exist! Exiting..."<<std::endl;
-             std::cout<<"Press any button"<<std::endl;
-            std::cin.ignore();
-            std::getchar();
+            cout<<"Warning: "<<stockCodeToBuy<<" does not exist! Exiting..."<<endl;
+             cout<<"Press any button"<<endl;
+            cin.ignore();
+            getchar();
             return;
         }
-        std::cout<<"Enter quantity to buy: ";
-        std::cin>>quantToBuy;
+        cout<<"Enter quantity to buy: ";
+        cin>>quantToBuy;
         if (quantToBuy < 0){
-            std::cout<<"Warning: Quantity to buy can't be negative! Reversing last action and exiting"<<std::endl;
-            std::cout<<"Press any button"<<std::endl;
-            std::cin.ignore();
-            std::getchar();
+            cout<<"Warning: Quantity to buy can't be negative! Reversing last action and exiting"<<endl;
+            cout<<"Press any button"<<endl;
+            cin.ignore();
+            getchar();
             return;
         }
         team.balance -= quantToBuy*findStockPrice(stockCodeToBuy);
         if (team.balance < 0){
-            std::cout<<"Warning: Team balance negative! Reversing last action and exiting"<<std::endl;
-            std::cout<<"Press any button"<<std::endl;
-            std::cin.ignore();
-            std::getchar();
+            cout<<"Warning: Team balance negative! Reversing last action and exiting"<<endl;
+            cout<<"Press any button"<<endl;
+            cin.ignore();
+            getchar();
             return;
         }
         bought = stockAlreadyBought(team, stockCodeToBuy, index);
@@ -313,13 +351,13 @@ void commandBuy(){
         }
     }
     else{
-        std::cout<<"Warning: Enter a valid team number!"<<std::endl;
-        std::cout<<"Exiting"<<std::endl;
-        std::cout<<"Press enter";
-        std::getchar();
+        cout<<"Warning: Enter a valid team number!"<<endl;
+        cout<<"Exiting"<<endl;
+        cout<<"Press enter";
+        getchar();
         return;
     }
-    fileStream.seekp((tNum - 1)*sizeof(details), std::ios::beg);
+    fileStream.seekp((tNum - 1)*sizeof(details), ios::beg);
     fileStream.write((char *) & team, sizeof(details));
     fileIn();
 }
@@ -335,7 +373,7 @@ bool stockAlreadyBought(details team, char stockCodeToBuy[10], int & index){
 
 bool isValidStockCode (char stockCode[10]){
     stocksFileStream.close();
-    stocksFileStream.open("stocks.dat", std::ios::in | std::ios::binary);
+    stocksFileStream.open("stocks.dat", ios::in | ios::binary);
     stocksFileMode = "in";
     stocks stock;
     int numOfRecords = nStocksRecords();
@@ -349,56 +387,56 @@ bool isValidStockCode (char stockCode[10]){
 
 void commandSell(){
     fileStream.close();
-    fileStream.open("data.dat", std::ios::in | std::ios::out | std::ios::binary);
+    fileStream.open("data.dat", ios::in | ios::out | ios::binary);
     fileMode = "inout";
     details team;
     int stockIndex, quantToSell;
     int tNum, numOfRecords = nRecords();
     for (int i = 0; i < numOfRecords; ++i){
         fileStream.read ((char *) & team, sizeof(details));
-        std::cout<<i + 1<<" --> "<<team.teamName<<std::endl;
+        cout<<i + 1<<" --> "<<team.teamName<<endl;
     }
-    std::cout<<"Enter team number: ";
-    std::cin>>tNum;
-    std::cin.ignore();
+    cout<<"Enter team number: ";
+    cin>>tNum;
+    cin.ignore();
     if (tNum > 0 && tNum <= numOfRecords){
-        fileStream.seekg((tNum - 1)*sizeof(details), std::ios::beg);
+        fileStream.seekg((tNum - 1)*sizeof(details), ios::beg);
         fileStream.read ((char *) & team, sizeof(details));
         printDetails(tNum);
         for (int i = 0; i < team.numOfStocks; ++i)
-            std::cout<<i + 1<<" --> "<<team.stockCodes[i]<<std::endl;
-        std::cout<<"Enter stock to sell: ";
-        std::cin>>stockIndex; --stockIndex;
-        std::cin.ignore();
+            cout<<i + 1<<" --> "<<team.stockCodes[i]<<endl;
+        cout<<"Enter stock to sell: ";
+        cin>>stockIndex; --stockIndex;
+        cin.ignore();
         if (stockIndex < 0 || stockIndex >team.numOfStocks - 1){
-            std::cout<<"Warning: Invalid stock number entered! Reversing last action and exiting"<<std::endl;
-            std::cout<<"Press any button"<<std::endl;
-            std::getchar();
+            cout<<"Warning: Invalid stock number entered! Reversing last action and exiting"<<endl;
+            cout<<"Press any button"<<endl;
+            getchar();
             return;
         }
-        std::cout<<"Enter quantity to sell: ";
-        std::cin>>quantToSell;
+        cout<<"Enter quantity to sell: ";
+        cin>>quantToSell;
         if (quantToSell < 0){
-            std::cout<<"Warning: Quantity to sell can't be negative! Reversing last action and exiting"<<std::endl;
-            std::cout<<"Press any button"<<std::endl;
-            std::cin.ignore();
-            std::getchar();
+            cout<<"Warning: Quantity to sell can't be negative! Reversing last action and exiting"<<endl;
+            cout<<"Press any button"<<endl;
+            cin.ignore();
+            getchar();
             return;
         }
         if (team.stockQuant[stockIndex] >= quantToSell){
             team.balance += quantToSell*findStockPrice(team.stockCodes[stockIndex]);
             team.stockQuant[stockIndex] -= quantToSell;
-            fileStream.seekp((tNum - 1)*sizeof(details), std::ios::beg);
+            fileStream.seekp((tNum - 1)*sizeof(details), ios::beg);
             fileStream.write ((char *) & team, sizeof(team));
         }
         else{
-            std::cout<<"Warning: Trying to sell more shares than they own!"<<std::endl;
-            //std::getchar();
+            cout<<"Warning: Trying to sell more shares than they own!"<<endl;
+            //getchar();
         }
     }
     else{
-        std::cout<<"Enter a valid team number!"<<std::endl;
-        std::cout<<"Reversing last action"<<std::endl;
+        cout<<"Enter a valid team number!"<<endl;
+        cout<<"Reversing last action"<<endl;
     }
     fileIn();
 }
@@ -409,12 +447,12 @@ void printDetails(int n){
     if (n < 0)
         return;
     if (n){
-        fileStream.seekg((n - 1)*sizeof(details), std::ios::beg);
+        fileStream.seekg((n - 1)*sizeof(details), ios::beg);
         printTeamDetails();
     }
     else{
         for (int i = 0; i < numOfRecords; ++i){
-            //fileStream.seekg(i*sizeof(details), std::ios::beg);
+            //fileStream.seekg(i*sizeof(details), ios::beg);
             printTeamDetails();
         }
     }
@@ -426,12 +464,12 @@ void printStockDetails(int n){
     if (n < 0)
         return;
     if (n){
-        stocksFileStream.seekg((n - 1)*sizeof(stocks), std::ios::beg);
+        stocksFileStream.seekg((n - 1)*sizeof(stocks), ios::beg);
         printIndStockDetails();
     }
     else{
         for (int i = 0; i < numOfRecords; ++i){
-            //stocksFileStream.seekg(i*sizeof(stocks), std::ios::beg);
+            //stocksFileStream.seekg(i*sizeof(stocks), ios::beg);
             printIndStockDetails();
         }
     }
@@ -440,23 +478,23 @@ void printStockDetails(int n){
 void printIndStockDetails(){
     stocks stock;
     stocksFileStream.read ((char *) & stock, sizeof(stocks));
-    std::cout<<"Stock name: "<<stock.stockName<<std::endl;
-    std::cout<<"Stock code: "<<stock.stockCode<<std::endl;
-    std::cout<<"Stock price: "<<stock.stockPrice<<std::endl;
+    cout<<"Stock name: "<<stock.stockName<<endl;
+    cout<<"Stock code: "<<stock.stockCode<<endl;
+    cout<<"Stock price: "<<stock.stockPrice<<endl;
     prettyPrint();
 }
 
 void printTeamDetails(){
     details team;
     fileStream.read ((char *) & team, sizeof(details));
-    std::cout<<"Team name: "<<team.teamName<<std::endl;
-    std::cout<<"Stocks: "<<std::endl;
+    cout<<"Team name: "<<team.teamName<<endl;
+    cout<<"Stocks: "<<endl;
     for (int i = 0; i < team.numOfStocks; ++i){
-        std::cout<<'\t'<<team.stockCodes[i]<<" : "<<team.stockQuant[i];
-        std::cout<<" : "<<team.stockQuant[i]*findStockPrice(team.stockCodes[i])<<std::endl;
+        cout<<'\t'<<team.stockCodes[i]<<" : "<<team.stockQuant[i];
+        cout<<" : "<<team.stockQuant[i]*findStockPrice(team.stockCodes[i])<<endl;
     }
-    std::cout<<"Balance: "<<team.balance<<std::endl;
-    std::cout<<"Profit: "<<calcProfit(team)<<std::endl;
+    cout<<"Balance: "<<team.balance<<endl;
+    cout<<"Profit: "<<calcProfit(team)<<endl;
     prettyPrint();
 }
 
@@ -472,7 +510,7 @@ int calcProfit(details team){
 int findStockPrice(char stockCode[10]){
     stocks stock;
     stocksFileStream.close();
-    stocksFileStream.open("stocks.dat", std::ios::in | std::ios::binary);
+    stocksFileStream.open("stocks.dat", ios::in | ios::binary);
     stocksFileMode = "in";
     bool found = false;
     while (stocksFileStream.read((char *) & stock, sizeof(stocks))){
@@ -482,11 +520,11 @@ int findStockPrice(char stockCode[10]){
         }
     }
     if (!found)
-        std::cout<<"Invalid stock code: "<<stockCode<<std::endl;
+        cout<<"Invalid stock code: "<<stockCode<<endl;
     return stock.stockPrice;
 }
 
-/*char * lowerString(char st[]){
+/*char * functions::lowerString(char st[]){
     int i;
     for (i = 0; st[i] != '\0'; ++i)
         string[i] = tolower(st[i]);
@@ -498,47 +536,47 @@ int findStockPrice(char stockCode[10]){
 int nRecords(){
     int beg, cur, numOfRecords;
     cur = fileStream.tellg();
-    fileStream.seekg(0, std::ios::beg);
+    fileStream.seekg(0, ios::beg);
     beg = fileStream.tellg();
-    fileStream.seekg(0, std::ios::end);
+    fileStream.seekg(0, ios::end);
     numOfRecords = ((int) fileStream.tellg() - beg)/sizeof(details);
-    fileStream.seekg(cur, std::ios::beg);
+    fileStream.seekg(cur, ios::beg);
     return numOfRecords;
 }
 
 int nStocksRecords(){
-    std::ifstream tempstocksFileStream;
-    tempstocksFileStream.open("stocks.dat", std::ios::in | std::ios::binary);
+    ifstream tempstocksFileStream;
+    tempstocksFileStream.open("stocks.dat", ios::in | ios::binary);
     int beg, cur, numOfRecords;
     cur = tempstocksFileStream.tellg();
-    tempstocksFileStream.seekg(0, std::ios::beg);
+    tempstocksFileStream.seekg(0, ios::beg);
     beg = tempstocksFileStream.tellg();
-    tempstocksFileStream.seekg(0, std::ios::end);
+    tempstocksFileStream.seekg(0, ios::end);
     numOfRecords = ((int) tempstocksFileStream.tellg() - beg)/sizeof(stocks);
-    tempstocksFileStream.seekg(cur, std::ios::beg);
+    tempstocksFileStream.seekg(cur, ios::beg);
     tempstocksFileStream.close();
     return numOfRecords;
 }
 
 void commandAll(){
     int decision;
-    std::cout<<"1 --> All Teams"<<std::endl;
-    std::cout<<"2 --> All Stocks"<<std::endl;
-    std::cin>>decision;
-    std::cin.ignore();
+    cout<<"1 --> All Teams"<<endl;
+    cout<<"2 --> All Stocks"<<endl;
+    cin>>decision;
+    cin.ignore();
     if (decision == 1){
         fileStream.close();
-        fileStream.open("data.dat", std::ios::in | std::ios::binary);
+        fileStream.open("data.dat", ios::in | ios::binary);
         fileMode = "in";
-        std::cout<<"Number of records: "<<nRecords()<<std::endl;
+        cout<<"Number of records: "<<nRecords()<<endl;
         prettyPrint();
         printDetails(0);
     }
     else if (decision == 2){
         stocksFileStream.close();
-        stocksFileStream.open("stocks.dat", std::ios::in | std::ios::binary);
+        stocksFileStream.open("stocks.dat", ios::in | ios::binary);
         stocksFileMode = "in";
-        std::cout<<"Number of records: "<<nStocksRecords()<<std::endl;
+        cout<<"Number of records: "<<nStocksRecords()<<endl;
         prettyPrint();
         printStockDetails(0);
     }
@@ -547,94 +585,94 @@ void commandAll(){
 
 void commandShow(){
     fileStream.close();
-    fileStream.open("data.dat", std::ios::in | std::ios::binary);
+    fileStream.open("data.dat", ios::in | ios::binary);
     fileMode = "in";
     details team;
     int tNum, numOfRecords = nRecords();
     for (int i = 0; i < numOfRecords; ++i){
         fileStream.read ((char *) & team, sizeof(details));
-        std::cout<<i + 1<<" --> "<<team.teamName<<std::endl;
+        cout<<i + 1<<" --> "<<team.teamName<<endl;
     }
-    std::cout<<"Enter team number to show: ";
-    std::cin>>tNum;
-    std::cin.ignore();
+    cout<<"Enter team number to show: ";
+    cin>>tNum;
+    cin.ignore();
     if (tNum > 0 && tNum <= numOfRecords)
         printDetails(tNum);
     else
-        std::cout<<"Enter a valid team number!"<<std::endl;
+        cout<<"Enter a valid team number!"<<endl;
     fileIn();
 }
 
 void commandAdd(){
     int decision;
-    std::cout<<"1 --> Add Teams"<<std::endl;
-    std::cout<<"2 --> Add Stocks"<<std::endl;
-    std::cin>>decision;
-    std::cin.ignore();
+    cout<<"1 --> Add Teams"<<endl;
+    cout<<"2 --> Add Stocks"<<endl;
+    cin>>decision;
+    cin.ignore();
     if (decision == 1){
         fileStream.close();
-        fileStream.open("data.dat", std::ios::app | std::ios::binary);
+        fileStream.open("data.dat", ios::app | ios::binary);
         fileMode = "app";
         addDetails();
         }
     else if (decision == 2){
         stocksFileStream.close();
-        stocksFileStream.open("stocks.dat", std::ios::app | std::ios::binary);
+        stocksFileStream.open("stocks.dat", ios::app | ios::binary);
         stocksFileMode = "app";
         addStocks();
     }
     else
-        std::cout<<"Enter valid input!"<<std::endl;
+        cout<<"Enter valid input!"<<endl;
     fileIn();
 }
 
 void commandModify(){
     /*int decision;
-    std::cout<<"1 --> Modify Teams"<<std::endl;
-    std::cout<<"2 --> Modify stocks price"<<std::endl;
-    std::cin>>decision;
-    std::cin.ignore();
+    cout<<"1 --> Modify Teams"<<endl;
+    cout<<"2 --> Modify stocks price"<<endl;
+    cin>>decision;
+    cin.ignore();
     if (decision == 1){
         fileStream.close();
-        fileStream.open("data.dat", std::ios::in | std::ios::out| std::ios::binary);
+        fileStream.open("data.dat", ios::in | ios::out| ios::binary);
         fileMode = "inout";
         details team;
         int tNum, numOfRecords = nRecords();
         for (int i = 0; i < numOfRecords; ++i){
             fileStream.read ((char *) & team, sizeof(details));
-            std::cout<<i + 1<<" --> "<<team.teamName<<std::endl;
+            cout<<i + 1<<" --> "<<team.teamName<<endl;
         }
-        std::cout<<"Enter team number to modify: ";
-        std::cin>>tNum;
-        std::cin.ignore();
-        stocksFileStream.seekg((tNum - 1)*sizeof(stocks), std::ios::beg);
+        cout<<"Enter team number to modify: ";
+        cin>>tNum;
+        cin.ignore();
+        stocksFileStream.seekg((tNum - 1)*sizeof(stocks), ios::beg);
         stocksFileStream.read ((char *) & team, sizeof(stocks));
-        stocksFileStream.seekp((tNum - 1)*sizeof(stocks), std::ios::beg);
+        stocksFileStream.seekp((tNum - 1)*sizeof(stocks), ios::beg);
     }
     */
    int decision;
-   std::cout<<"1 --> Modify all stock prices"<<std::endl;
-   std::cout<<"2 --> Modify single stock prices"<<std::endl;
-   std::cin>>decision;
+   cout<<"1 --> Modify all stock prices"<<endl;
+   cout<<"2 --> Modify single stock prices"<<endl;
+   cin>>decision;
    stocksFileStream.close();
-   stocksFileStream.open("stocks.dat", std::ios::in | std::ios::out | std::ios::binary);
+   stocksFileStream.open("stocks.dat", ios::in | ios::out | ios::binary);
    stocksFileMode = "inout";
    stocks stock;
    int sNum, numOfRecords = nStocksRecords();
    if (decision == 1){
        for (int i = 0; i < numOfRecords; ++i){
            sNum = i +1;
-           stocksFileStream.seekg((sNum - 1)*sizeof(stocks), std::ios::beg);
+           stocksFileStream.seekg((sNum - 1)*sizeof(stocks), ios::beg);
             stocksFileStream.read ((char *) & stock, sizeof(stocks));
-            //std::cout<<i + 1<<" --> "<<stock.stockName<<std::endl;
-            stocksFileStream.seekp((sNum - 1)*sizeof(stocks), std::ios::beg);
-            std::cout<<"Old price for "<<stock.stockName<<" : "<<stock.stockPrice<<std::endl;
-            std::cout<<"Enter new price for "<<stock.stockName<<" : ";
-            std::cin>>stock.stockPrice;
-            std::cin.ignore();
+            //cout<<i + 1<<" --> "<<stock.stockName<<endl;
+            stocksFileStream.seekp((sNum - 1)*sizeof(stocks), ios::beg);
+            cout<<"Old price for "<<stock.stockName<<" : "<<stock.stockPrice<<endl;
+            cout<<"Enter new price for "<<stock.stockName<<" : ";
+            cin>>stock.stockPrice;
+            cin.ignore();
              if (stock.stockPrice < 0){
-                std::cout<<"Warning: Stock price can't be negative!"<<std::endl;
-                std::cout<<"Reversing last action"<<std::endl;
+                cout<<"Warning: Stock price can't be negative!"<<endl;
+                cout<<"Reversing last action"<<endl;
                 --i;
                 continue;
             }
@@ -644,30 +682,30 @@ void commandModify(){
    else if (decision == 2){
         for (int i = 0; i < numOfRecords; ++i){
             stocksFileStream.read ((char *) & stock, sizeof(stocks));
-            std::cout<<i + 1<<" --> "<<stock.stockName<<std::endl;
+            cout<<i + 1<<" --> "<<stock.stockName<<endl;
         }
-        std::cout<<"Enter stock number to modify: ";
-        std::cin>>sNum;
-        std::cin.ignore();
+        cout<<"Enter stock number to modify: ";
+        cin>>sNum;
+        cin.ignore();
         if (sNum < 0 || sNum > numOfRecords){
-            std::cout<<"Warning: Wrong stock number!"<<std::endl;
-            std::cout<<"Exiting"<<std::endl;
-            std::cout<<"Press enter";
-            std::getchar();
+            cout<<"Warning: Wrong stock number!"<<endl;
+            cout<<"Exiting"<<endl;
+            cout<<"Press enter";
+            getchar();
             return;
         }
-        stocksFileStream.seekg((sNum - 1)*sizeof(stocks), std::ios::beg);
+        stocksFileStream.seekg((sNum - 1)*sizeof(stocks), ios::beg);
         stocksFileStream.read ((char *) & stock, sizeof(stocks));
-        stocksFileStream.seekp((sNum - 1)*sizeof(stocks), std::ios::beg);
-        std::cout<<"Old price for "<<stock.stockName<<" : "<<stock.stockPrice<<std::endl;
-        std::cout<<"Enter new price for "<<stock.stockName<<" : ";
-        std::cin>>stock.stockPrice;
-        std::cin.ignore();
+        stocksFileStream.seekp((sNum - 1)*sizeof(stocks), ios::beg);
+        cout<<"Old price for "<<stock.stockName<<" : "<<stock.stockPrice<<endl;
+        cout<<"Enter new price for "<<stock.stockName<<" : ";
+        cin>>stock.stockPrice;
+        cin.ignore();
         if (stock.stockPrice < 0){
-            std::cout<<"Warning: Stock price can't be negative!"<<std::endl;
-            std::cout<<"Reversing last action and exiting"<<std::endl;
-            std::cout<<"Press enter";
-            std::getchar();
+            cout<<"Warning: Stock price can't be negative!"<<endl;
+            cout<<"Reversing last action and exiting"<<endl;
+            cout<<"Press enter";
+            getchar();
             return;
         }
         stocksFileStream.write ((char *) & stock, sizeof(stocks));
@@ -675,24 +713,20 @@ void commandModify(){
     fileIn();
 }
 
-void commandDelete(){
-    fileIn();
-}
-
 void getDecision (int & decision){
-    std::cin>>decision;
-    if (std::cin.fail())
+    cin>>decision;
+    if (cin.fail())
         decision = 99; //invalid input
-    //std::cin.ignore(std::numeric_limits<std::streamsize>::max());
-    //std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    //cin.ignore(numeric_limits<streamsize>::max());
+    //cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
 
-std::string exec(const char* cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+string functions::exec(const char* cmd) {
+    array<char, 128> buffer;
+    string result;
+    unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
     if (!pipe) {
-        throw std::runtime_error("popen() failed!");
+        throw runtime_error("popen() failed!");
     }
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
@@ -700,8 +734,8 @@ std::string exec(const char* cmd) {
     return result;
 }
 
-bool checkSubString (std::string s1, std::string s2){
-    if (s1.find(s2) != std::string::npos)
+bool functions::checkSubString (string s1, string s2){
+    if (s1.find(s2) != string::npos)
         return true;
     else
         return false;    
@@ -709,38 +743,30 @@ bool checkSubString (std::string s1, std::string s2){
 
 void createStocksDataFile(){
     stocks stock;
-    stocksFileStream.open ("stocks.dat", std::ios::out);
-    std::cout<<"Stocks data file created as 'stocks.dat'.\n"
+    stocksFileStream.open ("stocks.dat", ios::out);
+    cout<<"Stocks data file created as 'stocks.dat'.\n"
             <<"Do not delete it unless you're absolutely sure of what you're doing!\n"
-            <<"Always keep a backup just in case."<<std::endl;
+            <<"Always keep a backup just in case."<<endl;
     stocksFileMode = "out";
     addStocks();
 }
 
 void createDataFile(){
     fileStream.close();
-    fileStream.open("data.dat", std::ios::out | std::ios::binary);
+    fileStream.open("data.dat", ios::out | ios::binary);
     fileMode = "out";
-    std::cout<<"Teams data file created as 'data.dat'.\n"
+    cout<<"Teams data file created as 'data.dat'.\n"
             <<"Do not delete it unless you're absolutely sure of what you're doing!\n"
-            <<"Always keep a backup just in case."<<std::endl;
+            <<"Always keep a backup just in case."<<endl;
     fileMode = "out";
     addDetails();
 }
 
-void clrscr(){
+void functions::clrscr(){
     system("cls");
     fileIn();
 }
 
-void prettyPrint(){
-    std::cout<<"............................................"<<std::endl;
-}
-
-void fileOut(){
-    addDetails();
-}
-
-void fileApp(){
-    addDetails();
+void functions::prettyPrint(){
+    cout<<"............................................"<<endl;
 }
