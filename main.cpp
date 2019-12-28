@@ -89,6 +89,7 @@ class configFile: private functions{
     void createConfig();
     public:
         configFile();
+        ~configFile();
         void fetchInitBalance();
 };
 
@@ -371,7 +372,7 @@ dataFile::~dataFile(){
 }
 
 stocksFile::stocksFile(){
-        if (compareDir("stocks.dat"))
+        if (!compareDir("stocks.dat"))
             createStocksDataFile();
 }
 
@@ -443,6 +444,7 @@ void stocksFile::commandModify(){
         }
         fileStream.write ((char *) & stock, sizeof(stocks));
    }
+   fileStream.close();
 }
 
 void stocksFile::printIndStockDetails(){
@@ -574,6 +576,10 @@ configFile::configFile(){
     }
 }
 
+configFile::~configFile(){
+    fileStream.close();
+}
+
 void configFile::fetchInitBalance(){
     int bal;
     fileStream.open("config.ini", ios::in);
@@ -691,6 +697,8 @@ void commandAdd(dataFile obj1, stocksFile obj2){
 void functions::run(dataFile obj1, stocksFile obj2){
     char command[20];
     int decision;
+    char ch = 'y';
+    do{
     cout<<"1 --> to view all details"<<endl;
     cout<<"2 --> to view details of a specific team"<<endl;
     cout<<"3 --> to add details"<<endl;
@@ -726,9 +734,10 @@ void functions::run(dataFile obj1, stocksFile obj2){
     else if (decision == 7)
         clrscr();
     else if (decision == 8)
-        ;
+        break;
     else{
         cout<<"Enter a valid command!"<<endl;
-
     }
+    }
+    while (1);
 }
