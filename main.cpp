@@ -49,6 +49,7 @@ class functions{
         bool stockAlreadyBought(details team, char stockCodeToBuy[10], int & index);
         int calcProfit(details team);
         void run(dataFile obj1, stocksFile obj2);
+        int nRecords();
 };
 
 class dataFile: private functions{
@@ -63,7 +64,6 @@ class dataFile: private functions{
         void printDetails(int n);
         void commandBuy();
         void commandSell();
-        int nRecords();
         void commandShow();
         friend void commandAdd(dataFile obj1, stocksFile obj2);
         friend void commandAll(dataFile obj1, stocksFile obj2);
@@ -106,14 +106,13 @@ dataFile::dataFile(const dataFile &obj){
     ;
 }
 
-int dataFile::nRecords(){
-    int beg, cur, numOfRecords;
-    cur = fileStream.tellg();
-    fileStream.seekg(0, ios::beg);
-    beg = fileStream.tellg();
-    fileStream.seekg(0, ios::end);
-    numOfRecords = ((int) fileStream.tellg() - beg)/sizeof(details);
-    fileStream.seekg(cur, ios::beg);
+int functions::nRecords(){
+    int  numOfRecords;
+    ifstream tempDataFileStream;
+    tempDataFileStream.open("data.dat", ios::binary|ios::in);
+    tempDataFileStream.seekg(0, ios::end);
+    numOfRecords = ((int) tempDataFileStream.tellg())/sizeof(details);
+    tempDataFileStream.close();
     return numOfRecords;
 }
 
@@ -133,6 +132,7 @@ void dataFile::commandShow(){
         printDetails(tNum);
     else
         cout<<"Enter a valid team number!"<<endl;
+    fileStream.close();
 }
 
 void dataFile::commandBuy(){
@@ -197,8 +197,11 @@ void dataFile::commandBuy(){
         getchar();
         return;
     }
+    fileStream.close();
+    fileStream.open("data.dat", ios::binary | ios::out);
     fileStream.seekp((tNum - 1)*sizeof(details), ios::beg);
     fileStream.write((char *) & team, sizeof(details));
+    fileStream.close();
 }
 
 void dataFile::printDetails(int n){
@@ -216,6 +219,7 @@ void dataFile::printDetails(int n){
             printTeamDetails();
         }
     }
+    fileStream.close();
 }
 
 void dataFile::printTeamDetails(){
@@ -297,6 +301,7 @@ void dataFile::addDetails(){
         }
         fileStream.write((char *) &team, sizeof(details));
     }
+    fileStream.close();
 }
 
 void dataFile::createDataFile(){
@@ -310,7 +315,7 @@ void dataFile::createDataFile(){
 
 void dataFile::commandSell(){
     fileStream.close();
-    fileStream.open("data.dat", ios::in | ios::out | ios::binary);
+    fileStream.open("data.dat", ios::binary | ios::out | ios::in);
     details team;
     int stockIndex, quantToSell;
     int tNum, numOfRecords = nRecords();
@@ -348,6 +353,8 @@ void dataFile::commandSell(){
         if (team.stockQuant[stockIndex] >= quantToSell){
             team.balance += quantToSell*findStockPrice(team.stockCodes[stockIndex]);
             team.stockQuant[stockIndex] -= quantToSell;
+            fileStream.close();
+            fileStream.open("data.dat", ios::binary | ios::out);
             fileStream.seekp((tNum - 1)*sizeof(details), ios::beg);
             fileStream.write ((char *) & team, sizeof(team));
         }
@@ -360,6 +367,7 @@ void dataFile::commandSell(){
         cout<<"Enter a valid team number!"<<endl;
         cout<<"Reversing last action"<<endl;
     }
+    fileStream.close();
 }
 
 dataFile::dataFile(){
@@ -496,6 +504,7 @@ bool functions::isValidStockCode (char stockCode[10]){
         if (!strcmp(stock.stockCode, stockCode))
             return true;
     }
+    tempStocksFileStream.close();
     return false;
 }
 
@@ -547,6 +556,7 @@ void stocksFile::printStockDetails(int n){
             printIndStockDetails();
         }
     }
+    fileStream.close();
 }
 
 void configFile::createConfig(){
@@ -590,6 +600,7 @@ void configFile::fetchInitBalance(){
     }
     else
         cout<<"Using default initial team balance of: "<<initBalance<<endl;
+    fileStream.close();
 }
 
 bool functions::compareDir(string s){
@@ -697,7 +708,6 @@ void commandAdd(dataFile obj1, stocksFile obj2){
 void functions::run(dataFile obj1, stocksFile obj2){
     char command[20];
     int decision;
-    char ch = 'y';
     do{
     cout<<"1 --> to view all details"<<endl;
     cout<<"2 --> to view details of a specific team"<<endl;
